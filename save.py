@@ -80,6 +80,8 @@ model.pop()
 model.pop()
 model.compile(optimizer='sgd', loss='categorical_crossentropy')
 
+print "output shape: " + str(model.output_shape)
+
 if input_dir.endswith('/'):
     input_dir = input_dir[:-1]
 if output_dir.endswith('/'):
