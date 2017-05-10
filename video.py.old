@@ -55,12 +55,7 @@ def load_vid(path, dim_ordering='default', grayscale=False, target_size=None):
         height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT if cv2.__version__[0] == '2' else cv2.CAP_PROP_FRAME_HEIGHT) + K.epsilon())
         width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH if cv2.__version__[0] == '2' else cv2.CAP_PROP_FRAME_WIDTH) + K.epsilon())
         mode = 'same'
-    elif len(target_size) == 2:
-        frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT if cv2.__version__[0] == '2' else cv2.CAP_PROP_FRAME_COUNT) + K.epsilon())
-        height = target_size[0]
-        width = target_size[1]
-        mode = 'same'
-    elif len(target_size) == 3:
+    else:
         frame_count = target_size[0]
         height = target_size[1]
         width = target_size[2]
@@ -73,8 +68,6 @@ def load_vid(path, dim_ordering='default', grayscale=False, target_size=None):
             frame_ratio = float(frame_count)/org_frame_count - 1
         else:
             mode = 'same'
-    else:
-        raise ValueError('Invalid target_size. It should be either (height, width) or (frame, height, width), or just None. Got ' + str(target_size)) 
 
     if grayscale:
         channels = 1
@@ -114,9 +107,8 @@ def load_vid(path, dim_ordering='default', grayscale=False, target_size=None):
                     vid[i] = vid[i-1]
                     i+=1
     if i != frame_count:
-        # it is many times safe, because some ffmpeg cropped media seems to have wrong frame_count.
-        print('video.py warning: Expected frame_count and real one doesn\'t match. Expected: %d and real: %d\nIt should not happen unless video.py itself is wrong, or the video file is corrupted.' % (frame_count, i))
-        vid = vid[:i]
+        raise Exception('Expected frame_count and real one doesn\'t match. Expected: ' + str(frame_count) + ' and real: ' + str(i)
+                + '\nIt should not happen unless video.py itself is wrong.')
 
     vid = vid.astype('float32')
     cap.release()
@@ -145,7 +137,7 @@ def save_vid(vid, path, rescale=None, dim_ordering='default'):
     if cv2.__version__[0] == '2':
         fourcc = cv2.cv.CV_FOURCC(*'HFYU')  # Huffman lossless
     else:
-        fourcc = cv2.VideoWriter_fourcc(*'HFYU')
+        fourcc = cv2.FOURCC(*'HFYU')
     out = cv2.VideoWriter(path, fourcc, 25.0, (width,height))
 
     for frame in vid:
