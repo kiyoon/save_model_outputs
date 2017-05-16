@@ -11,7 +11,7 @@ from video import load_vid
 
 from keras import backend as K
 
-def save_output(input_dir, output_dir, model):
+def save_output(input_dir, output_dir, model, rescale):
     i = 0
     total = 0
     for root, dirs, files in os.walk(input_dir):
@@ -28,7 +28,8 @@ def save_output(input_dir, output_dir, model):
                 os.makedirs(out_dir)
             if infile.lower().endswith('.npy'): # optical flows
                 flow_x = np.load(join(root,infile)).astype('float32')
-                flow_x *= 1./255
+                if rescale:
+                    flow_x *= 1./255
                 nb_flows = flow_x.shape[2] // 2 - 9
                 output = np.zeros((nb_flows,flow_x.shape[0],flow_x.shape[1],20), dtype='float32')
                 for k in range(nb_flows):
@@ -46,9 +47,10 @@ def save_output(input_dir, output_dir, model):
             np.save(out_file, output)
 
 if len(sys.argv) < 4:
-    print "Usage: %s [input_dir] [output_dir] [model_path] [split=-1(1,2 or 3. -1 when don't use split number)] [set_type=train, val or both. works iff split > -1]" % sys.argv[0]
+    print "Usage: %s [input_dir] [output_dir] [model_path] [split=-1(1,2 or 3. -1 when don't use split number)] [set_type=train, val or both. works iff split > -1] [oflow_rescale=False]" % sys.argv[0]
     print "Author: Kiyoon Kim (yoonkr33@gmail.com)"
     print "predict video, numpy(optical flow) data with a model and save outputs"
+    print "always rescale the video data, while you can optionally set the optical flows rescaling"
     sys.exit()
 
 gpu_frac = 0.3
@@ -65,10 +67,13 @@ input_dir = sys.argv[1]
 output_dir = sys.argv[2]
 model_path = sys.argv[3]
 
-
 dataset_split = -1
 if len(sys.argv) >= 5:
     dataset_split = int(sys.argv[4])
+
+rescale = False
+if len(sys.argv) >= 6:
+    rescale = sys.argv[5] == 'True'
 
 set_type = 'both'
 if len(sys.argv) >= 6:
@@ -89,8 +94,8 @@ if output_dir.endswith('/'):
 
 if dataset_split >= 0:
     if set_type == 'both' or set_type == 'train':
-        save_output(join(input_dir, 'train%d' % dataset_split), join(output_dir, 'train%d' % dataset_split), model)
+        save_output(join(input_dir, 'train%d' % dataset_split), join(output_dir, 'train%d' % dataset_split), model, rescale)
     if set_type == 'both' or set_type == 'val':
-        save_output(join(input_dir, 'val%d' % dataset_split), join(output_dir, 'val%d' % dataset_split), model)
+        save_output(join(input_dir, 'val%d' % dataset_split), join(output_dir, 'val%d' % dataset_split), model, rescale)
 else:
-    save_output(input_dir, output_dir, model)
+    save_output(input_dir, output_dir, model, rescale)
