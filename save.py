@@ -71,13 +71,13 @@ dataset_split = -1
 if len(sys.argv) >= 5:
     dataset_split = int(sys.argv[4])
 
-rescale = False
-if len(sys.argv) >= 6:
-    rescale = sys.argv[5] == 'True'
-
 set_type = 'both'
 if len(sys.argv) >= 6:
     set_type = sys.argv[5]
+
+rescale = False
+if len(sys.argv) >= 7:
+    rescale = sys.argv[6] == 'True'
 
 model = load_model(model_path)
 model.pop()
